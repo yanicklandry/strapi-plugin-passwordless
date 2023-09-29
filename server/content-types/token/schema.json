@@ -15,9 +15,14 @@
   "attributes": {
     "email": {
       "type": "email",
-      "required": true,
+      "required": false,
       "private": true,
       "configurable": false
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
     },
     "body": {
       "type": "string",

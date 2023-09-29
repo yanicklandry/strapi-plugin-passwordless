@@ -40,9 +40,15 @@ module.exports = {
 
     await passwordless.updateTokenOnLogin(token);
 
+    const where = {}
+    if (token.user) {
+      where.id = token.user.id
+    } else {
+      where.email = token.email
+    }
+
     const user = await strapi.query('plugin::users-permissions.user').findOne({
-      // where: {email: token.email}
-      where: {invitation_link: {$contains: loginToken}}
+      where,
     });
 
     if (!user) {
@@ -114,7 +120,7 @@ module.exports = {
     }
 
     try {
-      const token = await passwordless.createToken(user.email, context);
+      const token = await passwordless.createToken(user, context);
       await passwordless.sendLoginLink(token);
       ctx.send({
         email,

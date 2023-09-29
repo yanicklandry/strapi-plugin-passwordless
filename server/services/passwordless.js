@@ -7,7 +7,6 @@
  */
 
 const _ = require("lodash");
-const crypto = require("crypto");
 const {sanitize} = require('@strapi/utils');
 const {nanoid} = require("nanoid");
 
@@ -64,7 +63,7 @@ module.exports = (
 
     async user(email, username) {
       const settings = await this.settings();
-      const {user: userService} = strapi.plugins['users-permissions'].services;
+      // const {user: userService} = strapi.plugins['users-permissions'].services;
       const user = email ? await this.fetchUser({email}) : null;
       if (user) {
         return user;
@@ -119,16 +118,19 @@ module.exports = (
         .send(sendData);
     },
 
-    async createToken(email, context) {
+    async createToken(user, context) {
       const settings = await this.settings();
       const {token_length = 20, stays_valid = false} = settings;
-      await strapi.query('plugin::passwordless.token').update({where: {email}, data: {is_active: false}});
+      // await strapi.query('plugin::passwordless.token').update({where: {email: user.email}, data: {is_active: false}});
       const body = nanoid(token_length);
       const tokenInfo = {
-        email,
+        email: user.email,
         body,
         stays_valid,
-        context: JSON.stringify(context)
+        context: JSON.stringify(context),
+        user: {
+          connect: [user.id]
+        }
       };
       return strapi.query('plugin::passwordless.token').create({data: tokenInfo});
     },
@@ -154,7 +156,7 @@ module.exports = (
 
     fetchToken(body) {
       const tokensService = strapi.query('plugin::passwordless.token');
-      return tokensService.findOne({where: {body}});
+      return tokensService.findOne({where: {body}, populate: true});
     },
 
     async fetchUser(data) {
