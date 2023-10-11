@@ -44,7 +44,11 @@ module.exports = {
     if (token.user) {
       where.id = token.user.id
     } else {
-      where.email = token.email
+      if (token.email.indexOf('phone.com') !== -1) {
+        where.mobile_phone = token.email.replace('@phone.com', '')
+      } else {
+        where.email = token.email
+      }
     }
 
     const user = await strapi.query('plugin::users-permissions.user').findOne({
